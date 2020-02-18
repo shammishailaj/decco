@@ -1,25 +1,26 @@
 package appcontroller
 
 import (
-	"context"
-	"github.com/platform9/decco/pkg/k8sutil"
-	"github.com/platform9/decco/pkg/watcher"
-	"k8s.io/client-go/kubernetes"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/api/core/v1"
-	"time"
 	"fmt"
+	"os"
+	"strconv"
+	"time"
+
+	"github.com/sirupsen/logrus"
+	"k8s.io/api/core/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kwatch "k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	kwatch "k8s.io/apimachinery/pkg/watch"
-	"strconv"
-	"github.com/sirupsen/logrus"
-	"os"
+
+	"github.com/platform9/decco/pkg/k8sutil"
+	"github.com/platform9/decco/pkg/watcher"
 )
 
 var (
-	retryDelayIncrement = 2
-	watchTimeoutInSecs int64 = 20
+	retryDelayIncrement       = 2
+	watchTimeoutInSecs  int64 = 20
 )
 
 func init() {
@@ -43,10 +44,9 @@ func (ctl *Controller) shutdownWhenNamespaceGone() {
 	nsApi := kubeApi.CoreV1().Namespaces()
 	restClient := kubeApi.CoreV1().RESTClient()
 	sleepSeconds := 0
-	ctx := context.Background()
 	for {
 		select {
-		case <- ctl.stopCh:
+		case <-ctl.stopCh:
 			log.Debugf("graceful shut down detected in outer loop")
 			return
 		default:
@@ -57,7 +57,7 @@ func (ctl *Controller) shutdownWhenNamespaceGone() {
 		}
 		sleepSeconds += retryDelayIncrement
 		fs := fmt.Sprintf("metadata.name=%s", ctl.namespace)
-		nsList, err := nsApi.List(ctx, meta_v1.ListOptions{FieldSelector: fs})
+		nsList, err := nsApi.List(meta_v1.ListOptions{FieldSelector: fs})
 		if err != nil {
 			log.Warnf("failed to list namespaces %s", err)
 			continue
@@ -88,10 +88,7 @@ func (ctl *Controller) shutdownWhenNamespaceGone() {
 		log.Infof("restarting watch due to stream closure")
 		sleepSeconds = 0
 		continue
-		log.Errorf("did not find matching ns ... shutting down")
-		return
 	}
-	log.Errorf("failed to read namespace too many times, shutting down")
 }
 
 // watch namespace until it is deleted
@@ -106,19 +103,18 @@ func (ctl *Controller) watchNamespaceInternal(
 
 	log := ctl.log.WithField("func", "watchNamespaceInternal")
 	listOpts := meta_v1.ListOptions{
-		Watch: true,
-		FieldSelector: fs,
-		TimeoutSeconds: &watchTimeoutInSecs,
+		Watch:           true,
+		FieldSelector:   fs,
+		TimeoutSeconds:  &watchTimeoutInSecs,
 		ResourceVersion: resourceVersion,
 	}
 	log.Infof("watching namespace at rv %s", resourceVersion)
 	for {
-		ctx := context.Background()
 		w, err := restClient.
 			Get().
 			Resource("namespaces").
 			VersionedParams(&listOpts, scheme.ParameterCodec).
-			Watch(ctx)
+			Watch()
 
 		if err != nil {
 			return false, fmt.Errorf("failed to watch namespace: %s", err)
@@ -126,9 +122,9 @@ func (ctl *Controller) watchNamespaceInternal(
 			events := w.ResultChan()
 			for {
 				select {
-				case <- ctl.stopCh:
+				case <-ctl.stopCh:
 					return false, watcher.ErrTerminated
-				case event := <- events:
+				case event := <-events:
 					if event.Type == "" {
 						log.Debugf("stream closed")
 						return false, nil

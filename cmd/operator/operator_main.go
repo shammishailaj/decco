@@ -18,11 +18,11 @@ limitations under the License.
 package main
 
 import (
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	log "github.com/sirupsen/logrus"
-	"k8s.io/client-go/kubernetes"
 	"github.com/platform9/decco/pkg/k8sutil"
 	"github.com/platform9/decco/pkg/spacecontroller"
+	log "github.com/sirupsen/logrus"
+	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"os"
 	"time"
 )
@@ -51,4 +51,3 @@ func main() {
 		}
 	}
 }
-

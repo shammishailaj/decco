@@ -5712,9 +5712,9 @@ spec:
           - reason
           type: object
       type: object
-  version: v1
+  version: v1beta2
   versions:
-  - name: v1
+  - name: v1beta2
     served: true
     storage: true
 status:

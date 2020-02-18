@@ -22,7 +22,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	deccov1 "github.com/platform9/decco/api/v1"
+	deccov1 "github.com/platform9/decco/api/v1beta2"
 )
 
 // AppReconciler reconciles a App object

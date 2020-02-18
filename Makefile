@@ -26,7 +26,7 @@ springboard: generate fmt vet
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet
-	go run ./cmd/operator/main.go
+	go run ./cmd/operator
 
 # Install CRDs into a cluster
 install: manifests

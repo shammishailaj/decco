@@ -22,7 +22,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	deccov1 "github.com/platform9/decco/api/v1"
+	deccov1 "github.com/platform9/decco/api/v1beta2"
 )
 
 // SpaceReconciler reconciles a Space object
@@ -44,6 +44,12 @@ func (r *SpaceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if err != nil {
 		log.Error(err, "Failed to lookup object")
 		return ctrl.Result{}, err
+	}
+
+	// Check if object is being deleted
+	if space.ObjectMeta.DeletionTimestamp.IsZero() {
+		log.Info("Ignoring object being deleted.")
+		return ctrl.Result{}, nil
 	}
 
 	return ctrl.Result{}, nil

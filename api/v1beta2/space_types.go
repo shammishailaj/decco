@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	RESERVED_PROJECT_NAME = "system"
+	ReservedProjectName = "system"
 )
 
 var (
@@ -47,6 +47,7 @@ const (
 	SpacePhaseCreating            = "Creating"
 	SpacePhaseActive              = "Active"
 	SpacePhaseFailed              = "Failed"
+	SpacePhaseDeleting            = "Deleting"
 )
 
 // SpaceSpec defines the desired state of Space
@@ -74,7 +75,7 @@ func (in *SpaceSpec) Validate() error {
 	if in.HttpCertSecretName == "" {
 		return ErrHttpCertSecretNameMissing
 	}
-	if in.Project == RESERVED_PROJECT_NAME {
+	if in.Project == ReservedProjectName {
 		return ErrInvalidProjectName
 	}
 	return nil
@@ -98,8 +99,9 @@ func (in *SpaceSpec) Cleanup() {
 
 // SpaceStatus defines the observed state of Space
 type SpaceStatus struct {
-	Phase  SpacePhase `json:"phase"`
-	Reason string     `json:"reason"`
+	Phase     SpacePhase `json:"phase"`
+	Reason    string     `json:"reason"`
+	Namespace string     `json:"namespace"`
 }
 
 func (in *SpaceStatus) IsFailed() bool {
@@ -109,15 +111,17 @@ func (in *SpaceStatus) IsFailed() bool {
 	return in.Phase == SpacePhaseFailed
 }
 
-func (in *SpaceStatus) SetPhase(p SpacePhase) {
-	in.Phase = p
-}
-
-func (in *SpaceStatus) SetReason(r string) {
-	in.Reason = r
+func (in *SpaceStatus) SetPhase(phase SpacePhase, reason string) {
+	in.Phase = phase
+	in.Reason = reason
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Domain",type="string",JSONPath=".spec.domainName"
+// +kubebuilder:printcolumn:name="Namespace",type="string",JSONPath=".status.Namespace"
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Space is the Schema for the spaces API
 type Space struct {

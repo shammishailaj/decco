@@ -17,6 +17,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -42,21 +43,33 @@ func (r *SpaceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	space := deccov1.Space{}
 	err := r.Client.Get(ctx, req.NamespacedName, &space)
 	if err != nil {
-		log.Error(err, "Failed to lookup object")
-		return ctrl.Result{}, err
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	// Check if object is being deleted
-	if space.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !space.ObjectMeta.DeletionTimestamp.IsZero() {
 		log.Info("Ignoring object being deleted.")
 		return ctrl.Result{}, nil
 	}
 
+	// Validate object
+	err = space.Spec.Validate()
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	// Decide what to do based on current phase
+	switch space.Status.Phase {
+	case deccov1.SpacePhaseNone:
+		shouldCreateResources = true
+	case deccov1.SpacePhaseCreating:
+	case deccov1.SpacePhaseActive:
+		// Nothing to do when active
+	default:
+		return ctrl.Result{}, fmt.Errorf("unexpected space phase: %s", space.Status.Phase)
+	}
+
 	return ctrl.Result{}, nil
-}
-
-func (r *SpaceReconciler) delete(space *deccov1.Space) {
-
 }
 
 func (r *SpaceReconciler) SetupWithManager(mgr ctrl.Manager) error {

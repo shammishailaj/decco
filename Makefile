@@ -19,17 +19,17 @@ test: generate fmt vet manifests
 
 # Build manager binary
 operator: generate fmt vet
-	go build -o bin/operator ./cmd/operator_v2
+	go build -o bin/operator ./cmd/operator
 
 operator-debug: generate fmt vet
-	go build -gcflags="all=-N -l" -o bin/operator ./cmd/operator_v2
+	go build -gcflags="all=-N -l" -o bin/operator ./cmd/operator
 
 springboard: generate fmt vet
 	go build -o bin/springboard ./cmd/springboard
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: generate fmt vet
-	go run ./cmd/operator_v2
+	go run ./cmd/operator
 
 # Install CRDs into a cluster
 install: manifests

@@ -156,22 +156,22 @@ func (r *AppReconciler) reconcileSvc(ctx context.Context, app *deccov1.App, e *d
 		// TODO(josh): add back in the stunnel tomfoolery
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
-				{
-					Port: 443,
-					Name: "https",
-					TargetPort: intstr.IntOrString{
-						Type:   intstr.Int,
-						IntVal: e.Port,
-					},
-				},
-				{
-					Port: 80,
-					Name: "http",
-					TargetPort: intstr.IntOrString{
-						Type:   intstr.Int,
-						IntVal: e.Port,
-					},
-				},
+				// {
+				// 	Port: 443,
+				// 	Name: "https",
+				// 	TargetPort: intstr.IntOrString{
+				// 		Type:   intstr.Int,
+				// 		IntVal: e.Port,
+				// 	},
+				// },
+				// {
+				// 	Port: 80,
+				// 	Name: "http",
+				// 	TargetPort: intstr.IntOrString{
+				// 		Type:   intstr.Int,
+				// 		IntVal: e.Port,
+				// 	},
+				// },
 				{
 					Port: e.Port,
 					Name: "self",
